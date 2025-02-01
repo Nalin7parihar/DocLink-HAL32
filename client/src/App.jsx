@@ -1,18 +1,17 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
-import Home from '../pages/Home'
-import Doctors from '../pages/Doctors'
-import Login from '../pages/Login'
-import About from '../pages/About'
-import Contact from '../pages/Contact'
-import MyProfile from '../pages/MyProfile'
-import MyAppointments from '../pages/MyAppointments'
-import Appointments from '../pages/Appointments'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-import { ToastContainer } from 'react-toastify'
-
-
+import Home from './pages/Home'
+import Doctors from './pages/Doctors'
+import Login from './pages/Login'
+import About from './pages/About'
+import Contact from './pages/Contact'
+import MyProfile from './pages/MyProfile'
+import MyAppointments from './pages/MyAppointments'
+import Appointments from './pages/Appointments'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
+import { ToastContainer } from 'react-toastify';
+import MedBot from './MedBot'
 
 export default function App() {
   return (
@@ -29,8 +28,10 @@ export default function App() {
         <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/appointments/:docId' element={<Appointments />} />
+        <Route path='/med-bot' element={<MedBot />} />
       </Routes>
       <Footer />
     </div>
   )
 }
+

@@ -14,13 +14,12 @@ import DoctorDashboard from './pages/Doctor/DoctorDashboard';
 import DoctorProfile from './pages/Doctor/DoctorProfile';
 import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 
-
 export default function App() {
 
   const {aToken} = useContext(AdminContext)
   const {dToken} = useContext(DoctorContext)
 
-  return  !aToken || dToken ? (
+  return  aToken || dToken ? (
     <div className='bg-[#F8F9FD]'>
       <ToastContainer />
       <Navbar />
