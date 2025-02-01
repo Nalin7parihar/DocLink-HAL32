@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #539DDB;
+}
+
+::-webkit-scrollbar{
+  @apply hidden
+}
+
+*{
+  font-family: Outfit;
+}
