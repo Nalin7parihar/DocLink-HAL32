@@ -1,58 +1,53 @@
-from langchain_core.prompts import ChatPromptTemplate,MessagesPlaceholder
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import HumanMessage,SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
 import re
-import streamlit as st
 
+app = Flask(__name__)
+CORS(app)  # Enable CORS
 
+# Initialize chat history
+chat_history = ChatMessageHistory()
+chat_history.add_message(SystemMessage(content="You are a helpful AI medical assistant. Only answer medical queries."))
 
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = ChatMessageHistory()
-
-# Add the system message if it's not already in the history
-if len(st.session_state.chat_history.messages) == 0:
-    st.session_state.chat_history.add_message(SystemMessage(content="You are a helpful AI medical assistant.Only answer the asked queriew"))
-
-
-
-model = OllamaLLM(model = "monotykamary/medichat-llama3")
-
-
-
-
+# Initialize model
+model = OllamaLLM(model="monotykamary/medichat-llama3")
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful AI medical assistant that provides answers related to health."),
-    MessagesPlaceholder(variable_name="messages") #Placeholder for chat history
+    MessagesPlaceholder(variable_name="messages")
 ])
 output_parser = StrOutputParser()
-#streamlit framework
-st.title("Langchain Medical Assistant")
-input_text = st.text_input("How can I help you?")
 
-
-if input_text:
-  with st.spinner("Generating a response..."):
-        st.session_state.chat_history.add_message(HumanMessage(content=input_text))  # Add user message to history
-        # Format the prompt with the current messages
-        chain = prompt | model | output_parser
-        response = chain.invoke({"messages":st.session_state.chat_history.messages[1:] })  # No input needed as the prompt has all the context
-        cleaned_response = re.sub(r'function\(\)\s*{[^}]*}', '', response)
-        st.session_state.chat_history.add_message(SystemMessage(content=cleaned_response))  # Add AI response to history
-        st.write(cleaned_response)
+@app.route("/chat", methods=["POST"])
+def chat():
+    try:
+        data = request.get_json()
         
-  # Display chat history
-  
+        if not data or "message" not in data:
+            return jsonify({"error": "Message field is required"}), 400
+            
+        user_message = data["message"].strip()
+        if not user_message:
+            return jsonify({"error": "Message cannot be empty"}), 400
 
-  #st.subheader("Chat History:")
-  #for message in st.session_state.chat_history:
-   #   if isinstance(message, HumanMessage):
-    #      if message.content != response: #check if the message is not the recent response
-     #         st.write(f"**You:** {message.content}")
-      #    else:
-       #       st.write(f"**AI:** {message.content}")
-      #elif isinstance(message, SystemMessage):
-       #   pass  # Don't display system messages in the chat history
- 
+        # Process message
+        chat_history.add_message(HumanMessage(content=user_message))
+        chain = prompt | model | output_parser
+        response = chain.invoke({"messages": chat_history.messages[1:]})
+        
+        # Clean and store response
+        cleaned_response = re.sub(r'function\(\)\s*{[^}]*}', '', response)
+        chat_history.add_message(SystemMessage(content=cleaned_response))
+        
+        return jsonify({"reply": cleaned_response})
 
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(port=5000)  # Run Flask on port 5001
